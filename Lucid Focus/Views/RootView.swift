@@ -19,8 +19,8 @@ struct RootView: View {
             Tab(AppTab.timer.rawValue, systemImage: AppTab.timer.icon, value: AppTab.timer) {
                 TimerView()
             }
-            Tab(AppTab.whiteNoise.rawValue, systemImage: AppTab.whiteNoise.icon, value: AppTab.whiteNoise) {
-                WhiteNoiseView()
+            Tab(AppTab.activities.rawValue, systemImage: AppTab.activities.icon, value: AppTab.activities) {
+                ActivitiesView()
             }
             Tab(AppTab.settings.rawValue, systemImage: AppTab.settings.icon, value: AppTab.settings) {
                 SettingsView()
@@ -31,14 +31,14 @@ struct RootView: View {
     }
     
     enum AppTab: String {
-        case whiteNoise = "whiteNoise"
+        case activities = "Activities"
         case statistics = "Statistics"
         case timer      = "Timer"
         case settings   = "Settings"
         
         var icon: String {
             switch self {
-            case .whiteNoise:      return "headphones.over.ear"
+            case .activities: return "list.dash"
             case .statistics: return "chart.bar.fill"
             case .timer:      return "timer"
             case .settings:   return "gearshape"
