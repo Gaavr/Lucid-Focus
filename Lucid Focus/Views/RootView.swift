@@ -28,6 +28,7 @@ struct RootView: View {
         }
         .labelStyle(.iconOnly)
         .tint(.orange)
+        
     }
     
     enum AppTab: String {

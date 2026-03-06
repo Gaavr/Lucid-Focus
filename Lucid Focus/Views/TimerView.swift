@@ -9,33 +9,21 @@ import SwiftUI
 
 struct TimerView: View {
     
-    @State private var choosenActivity: String = "iOS Dev"
-    @State private var choosenTimeQuility: TimeQuality = TimeQuality.focus
-    
-    @State private var sessionDurationInSeconds: Int = 5
-    @State private var endDate: Date?
-    @State private var remainingTimeAfterPause: Int = 0
-    
-    enum TimerState {
-        case idle
-        case running
-        case paused
-        case finished
-    }
-    
-    let activities: [String] = ["iOS Dev", "Task1", "Task2","iOS Dev3", "Task12", "Task23","iOS Dev4", "Task15", "Task26","iOS Dev7", "Task18", "Task29","iOS10 Dev", "Task112", "Task213"]
-    
-    enum TimeQuality: String, CaseIterable{
-        case focus = "Focus"
-        case light = "Light"
-    }
+    @State private var vm = TimerViewModel()
     
     var body: some View {
         VStack {
             Spacer()
             HStack {
+                Picker("Choose activity", selection: $vm.choosenActivity) {
+                    ForEach(vm.activities, id: \.self) { activity in
+                        Text(activity)
+                    }
+                }
+                .pickerStyle(.menu)
+                .tint(.primary)
                 Spacer()
-                Picker("Time quility", selection: $choosenTimeQuility) {
+                Picker("Time quility", selection: $vm.choosenTimeQuility) {
                     ForEach(TimeQuality.allCases, id: \.self) { timeQuality in
                         Text(timeQuality.rawValue)
                     }
@@ -43,7 +31,6 @@ struct TimerView: View {
                 .pickerStyle(.palette)
                 .fixedSize()
                 .padding(.horizontal, 20)
-                
             }
             HStack {
                 ZStack {
@@ -55,38 +42,53 @@ struct TimerView: View {
                         .stroke(.primary, lineWidth: 10)
                         .rotationEffect(.degrees(-90))
                     VStack {
-                        Text("1 h 30 m")
-                            .font(.footnote)
-                            .padding(10)
-                        Text("25:55")
-                            .font(.system(size: 95, weight: .bold))
+                        HStack {
+                            VStack {
+                                Text("Total time:")
+                                    .font(.caption2)
+                                Text(vm.sessionDuration.formattedClock())
+                                    .font(.footnote)
+                            }
+                        }
+                        .padding(10)
+                       
+                        Text(vm.remaining.formattedClock())
+                            .font(.system(size: 65, weight: .bold))
                             .monospacedDigit()
                         HStack {
-                            Picker("Choose activity", selection: $choosenActivity) {
-                                ForEach(activities, id: \.self) { activity in
-                                    Text(activity)
-                                }
+                            VStack {
+                                Text("Timer end at:")
+                                    .font(.caption2)
+                                Text(vm.endDateString)
+                                    .font(.footnote)
                             }
-                            .pickerStyle(.menu)
-                            .tint(.primary)
                         }
+                        .padding(10)
                     }
-                   
-                    
                 }
             }
             .padding(20)
             HStack {
                 Button {
-                    
+                    if ((vm.timerState == .idle) || (vm.timerState == .finished)) {
+                        vm.start()
+                    } else {
+                        vm.stop()
+                    }
                 } label: {
-                    Text("Start")
+                    Text((vm.timerState == .idle) || (vm.timerState == .finished) ? "Start session" : "Finish session")
                 }
                 Spacer()
-                Button {
-                    
-                } label: {
-                    Text("Pause")
+                if vm.timerState == .running || vm.timerState == .paused {
+                    Button {
+                        if (vm.timerState == .running) {
+                            vm.pause()
+                        } else {
+                            vm.resume()
+                        }
+                    } label: {
+                        Text(vm.timerState == .running ? "Pause" : "Resume")
+                    }
                 }
             }
             .font(.system(.headline))
