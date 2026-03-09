@@ -5,8 +5,7 @@
 //  Created by Andrei Gavrilenko on 04.03.2026.
 //
 
-import SwiftUI
-
+import SwiftData
 import SwiftUI
 
 @main
@@ -15,5 +14,6 @@ struct Lucid_FocusApp: App {
         WindowGroup {
             RootView()
         }
+        .modelContainer(for: [Activity.self, WorkBlock.self, Session.self, Break.self])
     }
 }

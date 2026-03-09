@@ -9,21 +9,23 @@ import SwiftUI
 
 struct TimerView: View {
     
+    @Environment(\.modelContext) private var modelContext
     @State private var vm = TimerViewModel()
     
     var body: some View {
         VStack {
             Spacer()
             HStack {
-                Picker("Choose activity", selection: $vm.choosenActivity) {
-                    ForEach(vm.activities, id: \.self) { activity in
-                        Text(activity)
+                Picker("Choose activity", selection: $vm.selectedActivity) {
+                    ForEach(vm.activities, id: \.id) { activity in
+                        Text(activity.name)
+                            .tag(activity)
                     }
                 }
                 .pickerStyle(.menu)
                 .tint(.primary)
                 Spacer()
-                Picker("Time quility", selection: $vm.choosenTimeQuility) {
+                Picker("Time quility", selection: $vm.selectedQuality) {
                     ForEach(TimeQuality.allCases, id: \.self) { timeQuality in
                         Text(timeQuality.rawValue)
                     }
@@ -81,7 +83,7 @@ struct TimerView: View {
                         vm.stop()
                     }
                 } label: {
-                    Text((vm.timerState == .idle) || (vm.timerState == .finished) ? "Start session" : "Finish session")
+                    Text((vm.timerState == .idle) || (vm.timerState == .finished) ? "Start block" : "Finish block")
                 }
                 Spacer()
                 if vm.timerState == .running || vm.timerState == .paused {
@@ -101,6 +103,9 @@ struct TimerView: View {
             Spacer()
         }
         .tint(.primary)
+        .onAppear {
+            vm.setContext(modelContext)
+        }
     }
 }
 

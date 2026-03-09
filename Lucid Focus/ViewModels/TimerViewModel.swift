@@ -6,25 +6,32 @@
 //
 
 import Foundation
+import SwiftData
 
 @Observable
 final class TimerViewModel {
     
-    var choosenTimeQuility: TimeQuality = TimeQuality.focus
-    var choosenActivity: String = "iOS Dev"
-    
-    let activities: [String] = ["iOS Dev", "Task1", "Task2","iOS Dev3", "Task12", "Task23","iOS Dev4", "Task15", "Task26","iOS Dev7", "Task18", "Task29","iOS10 Dev", "Task112", "Task213"]
-    
+    private var modelContext: ModelContext?
+    var selectedActivity: Activity = .example
+    let activities: [Activity] = Activity.examples
+    var selectedQuality: TimeQuality = .deep
     private var systemTimer: Timer?
+    private(set) var currentBlock: WorkBlock?
+    private(set) var sessionDuration: TimeInterval = 5400
+    private(set) var endDate: Date?
+    private(set) var remainingTimeAtPause: Double?
+    private(set) var timerState: BlockState = .idle
+    private(set) var remaining : TimeInterval = 0
     
-    //переделать чтобы отдельно formatter вызывать и обновлять это значение для view, когда таймер на паузек
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm"
+        return f
+    }()
+    
     var endDateString: String {
         guard let endDate else { return "--:--" }
-        
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        
-        return formatter.string(from: endDate)
+        return Self.timeFormatter.string(from: endDate)
     }
     
     var progress: Double {
@@ -32,7 +39,7 @@ final class TimerViewModel {
         return remaining / sessionDuration
     }
     
-    func startTicking() {
+    private func startTicking() {
         systemTimer?.invalidate()
         systemTimer = Timer.scheduledTimer(
             withTimeInterval: 1,
@@ -41,7 +48,7 @@ final class TimerViewModel {
             }
     }
     
-    func stopTicking() {
+    private func stopTicking() {
         systemTimer?.invalidate()
         systemTimer = nil
     }
@@ -50,22 +57,28 @@ final class TimerViewModel {
         remaining = sessionDuration
     }
     
-    private(set) var sessionDuration: TimeInterval = 10
-    private(set) var endDate: Date?
-    private(set) var remainingTimeAtPause: Double?
-    private(set) var timerState: TimerState = .idle
-    private(set) var remaining : TimeInterval = 0
+    func setContext(_ context: ModelContext) {
+        self.modelContext = context
+    }
     
     func start() {
-        //начинаем писать стату
+        let block = WorkBlock(
+            activity: selectedActivity,
+            session: nil,
+            quality: selectedQuality,
+            plannedDuration: sessionDuration
+        )
+        modelContext?.insert(block)
+        currentBlock = block
+        
         remaining = sessionDuration
-        endDate = Date.now + sessionDuration
+        endDate = .now + sessionDuration
         timerState = .running
         startTicking()
     }
     
     func pause() {
-        //повышаем счетчик пауз для сессии
+        currentBlock?.pauseCounter += 1
         remainingTimeAtPause = endDate?.timeIntervalSinceNow
         timerState = .paused
         stopTicking()
@@ -79,11 +92,7 @@ final class TimerViewModel {
     }
     
     func stop() {
-        endDate = nil
-        remainingTimeAtPause = 0
-        remaining = sessionDuration
-        timerState = .idle
-        stopTicking()
+        finishBlock()
     }
     
     func updateRemainingTime() {
@@ -94,20 +103,22 @@ final class TimerViewModel {
             stopTicking()
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(1))
-                timerState = .finished
+                self.finishBlock()
             }
         }
     }
-}
-
-enum TimeQuality: String, CaseIterable{
-    case focus = "Focus"
-    case light = "Light"
-}
-
-enum TimerState {
-    case idle
-    case running
-    case paused
-    case finished
+    
+    func finishBlock() {
+        currentBlock?.endDate = .now
+        currentBlock?.actualDuration = sessionDuration - remaining
+        currentBlock?.state = .finished
+        try? modelContext?.save()
+        
+        endDate = nil
+        remainingTimeAtPause = nil
+        remaining = sessionDuration
+        timerState = .idle
+        currentBlock = nil
+        stopTicking()
+    }
 }
