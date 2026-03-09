@@ -36,11 +36,14 @@ struct TimerView: View {
                 ZStack {
                     Circle()
                         .stroke(.gray, lineWidth: 10)
-                    
                     Circle()
-                        .trim(from: 0, to: 0.7)
+                        .trim(from: 0, to: vm.progress)
                         .stroke(.primary, lineWidth: 10)
                         .rotationEffect(.degrees(-90))
+                        .animation(
+                            vm.timerState == .running || vm.timerState == .paused ? .linear(duration: 1) : .none,
+                            value: vm.progress
+                        )
                     VStack {
                         HStack {
                             VStack {
@@ -51,10 +54,12 @@ struct TimerView: View {
                             }
                         }
                         .padding(10)
-                       
+                        
                         Text(vm.remaining.formattedClock())
                             .font(.system(size: 65, weight: .bold))
                             .monospacedDigit()
+                            .contentTransition(.numericText(countsDown: true))
+                            .animation(.linear(duration: 1), value: vm.remaining)
                         HStack {
                             VStack {
                                 Text("Timer end at:")

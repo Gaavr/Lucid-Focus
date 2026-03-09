@@ -40,7 +40,7 @@ struct RootView: View {
         var icon: String {
             switch self {
             case .activities: return "list.dash"
-            case .statistics: return "chart.bar.fill"
+            case .statistics: return "chart.bar"
             case .timer:      return "timer"
             case .settings:   return "gearshape"
             }

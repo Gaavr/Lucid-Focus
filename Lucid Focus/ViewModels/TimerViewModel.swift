@@ -27,6 +27,11 @@ final class TimerViewModel {
         return formatter.string(from: endDate)
     }
     
+    var progress: Double {
+        guard sessionDuration > 0 else { return 0 }
+        return remaining / sessionDuration
+    }
+    
     func startTicking() {
         systemTimer?.invalidate()
         systemTimer = Timer.scheduledTimer(
@@ -45,7 +50,7 @@ final class TimerViewModel {
         remaining = sessionDuration
     }
     
-    private(set) var sessionDuration: TimeInterval = 5400
+    private(set) var sessionDuration: TimeInterval = 10
     private(set) var endDate: Date?
     private(set) var remainingTimeAtPause: Double?
     private(set) var timerState: TimerState = .idle
@@ -53,6 +58,7 @@ final class TimerViewModel {
     
     func start() {
         //начинаем писать стату
+        remaining = sessionDuration
         endDate = Date.now + sessionDuration
         timerState = .running
         startTicking()
@@ -86,7 +92,10 @@ final class TimerViewModel {
         
         if remaining == 0 {
             stopTicking()
-            timerState = .finished
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1))
+                timerState = .finished
+            }
         }
     }
 }
