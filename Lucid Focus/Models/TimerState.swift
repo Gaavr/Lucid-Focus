@@ -6,7 +6,7 @@
 //
 
 
-enum BlockState: String, Codable {
+enum TimerState: String, Codable {
     case idle
     case running
     case paused

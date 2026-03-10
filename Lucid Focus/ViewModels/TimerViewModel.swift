@@ -17,11 +17,12 @@ final class TimerViewModel {
     var selectedQuality: TimeQuality = .deep
     private var systemTimer: Timer?
     private(set) var currentBlock: WorkBlock?
-    private(set) var sessionDuration: TimeInterval = 5400
+    private(set) var sessionDuration: TimeInterval = 105400
     private(set) var endDate: Date?
     private(set) var remainingTimeAtPause: Double?
-    private(set) var timerState: BlockState = .idle
+    private(set) var timerState: TimerState = .idle
     private(set) var remaining : TimeInterval = 0
+    private let userDefaults = UserDefaults.standard
     
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -55,6 +56,26 @@ final class TimerViewModel {
     
     init () {
         remaining = sessionDuration
+        if let date = UserDefaults.standard.object(forKey: DefaultsKeys.endDate),
+           let endDate = date as? Date
+        {
+            self.endDate = endDate
+            remaining = max(endDate.timeIntervalSinceNow, 0)
+            if (remaining == 0) {
+                UserDefaults.standard.removeObject(forKey: DefaultsKeys.timerState)
+                UserDefaults.standard.removeObject(forKey: DefaultsKeys.endDate)
+                return
+            }
+        } else {
+            return
+        }
+        if let timerStateRawValue = UserDefaults.standard.string(forKey: DefaultsKeys.timerState),
+           let timerState = TimerState(rawValue: timerStateRawValue) {
+            self.timerState = timerState
+        }
+        if (timerState == TimerState.overtime || timerState == TimerState.running) {
+            startTicking()
+        }
     }
     
     func setContext(_ context: ModelContext) {
@@ -70,10 +91,11 @@ final class TimerViewModel {
         )
         modelContext?.insert(block)
         currentBlock = block
-        
         remaining = sessionDuration
         endDate = .now + sessionDuration
+        userDefaults.set(endDate, forKey: DefaultsKeys.endDate)
         timerState = .running
+        userDefaults.set(timerState.rawValue, forKey: DefaultsKeys.timerState)
         startTicking()
     }
     
@@ -81,14 +103,17 @@ final class TimerViewModel {
         currentBlock?.pauseCounter += 1
         remainingTimeAtPause = endDate?.timeIntervalSinceNow
         timerState = .paused
+        userDefaults.set(timerState.rawValue, forKey: DefaultsKeys.timerState)
         stopTicking()
     }
     
     func resume() {
         guard let remaining = remainingTimeAtPause else { return }
         endDate = Date.now + TimeInterval(remaining)
+        userDefaults.set(endDate, forKey: DefaultsKeys.endDate)
         startTicking()
         timerState = .running
+        userDefaults.set(timerState.rawValue, forKey: DefaultsKeys.timerState)
     }
     
     func stop() {
@@ -120,5 +145,7 @@ final class TimerViewModel {
         timerState = .idle
         currentBlock = nil
         stopTicking()
+        UserDefaults.standard.removeObject(forKey: DefaultsKeys.timerState)
+        UserDefaults.standard.removeObject(forKey: DefaultsKeys.endDate)
     }
 }

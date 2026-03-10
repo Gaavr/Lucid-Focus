@@ -18,7 +18,7 @@ final class WorkBlock {
     var pauseCounter: Int
     var startDate: Date
     var endDate: Date?
-    var state: BlockState
+    var state: TimerState
     
     var activity: Activity?
     var session: Session?
