@@ -27,7 +27,7 @@ struct RootView: View {
             }
         }
         .labelStyle(.iconOnly)
-        .tint(.orange)
+//        .tint(.orange)
         
     }
     

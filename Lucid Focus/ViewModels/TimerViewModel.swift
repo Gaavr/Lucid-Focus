@@ -17,12 +17,15 @@ final class TimerViewModel {
     var selectedQuality: TimeQuality = .deep
     private var systemTimer: Timer?
     private(set) var currentBlock: WorkBlock?
-    private(set) var sessionDuration: TimeInterval = 105400
+    private(set) var sessionDuration: TimeInterval = 2
     private(set) var endDate: Date?
     private(set) var remainingTimeAtPause: Double?
     private(set) var timerState: TimerState = .idle
     private(set) var remaining : TimeInterval = 0
     private let userDefaults = UserDefaults.standard
+    private let notificationService: NotificationService = NotificationService()
+    private var overTimeStartDate: Date? = nil
+    var overTimeDuration: TimeInterval = 0
     
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -55,6 +58,9 @@ final class TimerViewModel {
     }
     
     init () {
+        Task {
+            await notificationService.requestPermition()
+        }
         remaining = sessionDuration
         if let date = UserDefaults.standard.object(forKey: DefaultsKeys.endDate),
            let endDate = date as? Date
@@ -97,6 +103,8 @@ final class TimerViewModel {
         timerState = .running
         userDefaults.set(timerState.rawValue, forKey: DefaultsKeys.timerState)
         startTicking()
+        guard let date = endDate else { return }
+        notificationService.scheduleTimerNotification(at: date)
     }
     
     func pause() {
@@ -105,6 +113,7 @@ final class TimerViewModel {
         timerState = .paused
         userDefaults.set(timerState.rawValue, forKey: DefaultsKeys.timerState)
         stopTicking()
+        notificationService.cancelNotification(for: .timerFinished)
     }
     
     func resume() {
@@ -114,6 +123,8 @@ final class TimerViewModel {
         startTicking()
         timerState = .running
         userDefaults.set(timerState.rawValue, forKey: DefaultsKeys.timerState)
+        guard let date = endDate else { return }
+        notificationService.scheduleTimerNotification(at: date)
     }
     
     func stop() {
@@ -121,15 +132,20 @@ final class TimerViewModel {
     }
     
     func updateRemainingTime() {
-        guard let date = endDate else { return }
-        remaining = max(date.timeIntervalSinceNow, 0)
-        
-        if remaining == 0 {
-            stopTicking()
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(1))
-                self.finishBlock()
+        if (timerState != .overtime) {
+            guard let date = endDate else { return }
+            remaining = max(date.timeIntervalSinceNow, 0)
+            
+            if remaining == 0 {
+                stopTicking()
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(1))
+                    self.finishBlock()
+                }
             }
+        } else {
+            guard let overTimeStartDate else { return }
+            overTimeDuration = Date.now.timeIntervalSince(overTimeStartDate)
         }
     }
     
@@ -142,10 +158,23 @@ final class TimerViewModel {
         endDate = nil
         remainingTimeAtPause = nil
         remaining = sessionDuration
-        timerState = .idle
+        timerState = .finished
         currentBlock = nil
         stopTicking()
         UserDefaults.standard.removeObject(forKey: DefaultsKeys.timerState)
         UserDefaults.standard.removeObject(forKey: DefaultsKeys.endDate)
+        notificationService.cancelNotification(for: .timerFinished)
+    }
+    
+    func startOvertime() {
+        overTimeStartDate = Date.now
+        timerState = .overtime
+        startTicking()
+    }
+    
+    func finishOvertime() {
+        guard let overTimeStartDate else { return }
+        overTimeDuration = Date.now.timeIntervalSince(overTimeStartDate)
+        timerState = .idle
     }
 }
