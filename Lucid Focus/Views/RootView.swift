@@ -27,7 +27,9 @@ struct RootView: View {
             }
         }
         .labelStyle(.iconOnly)
-//        .tint(.orange)
+        .onAppear{
+            print("Root View появился")
+        }
         
     }
     

@@ -11,6 +11,7 @@ struct TimerFinishedView: View {
     
     let onStop: () -> Void
     let onOvertime: () -> Void
+    let sound: TimerSound
     
     var body: some View {
         ZStack {
@@ -59,6 +60,9 @@ struct TimerFinishedView: View {
             .shadow(color: .black.opacity(0.12), radius: 20, y: 8)
             .padding(.horizontal, 24)
         }
+        .onAppear {
+            SoundService.instance.play(sound)
+        }
     }
 }
 
@@ -69,7 +73,8 @@ struct TimerFinishedView: View {
         
         TimerFinishedView(
             onStop: { print("Stop tapped") },
-            onOvertime: { print("Overtime tapped") }
+            onOvertime: { print("Overtime tapped") },
+            sound: TimerSound.lofi
         )
     }
 }

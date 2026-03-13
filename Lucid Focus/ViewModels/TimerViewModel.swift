@@ -26,6 +26,7 @@ final class TimerViewModel {
     private let notificationService: NotificationService = NotificationService()
     private var overTimeStartDate: Date? = nil
     var overTimeDuration: TimeInterval = 0
+    var sound: TimerSound = .sound2
     
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -164,12 +165,14 @@ final class TimerViewModel {
         UserDefaults.standard.removeObject(forKey: DefaultsKeys.timerState)
         UserDefaults.standard.removeObject(forKey: DefaultsKeys.endDate)
         notificationService.cancelNotification(for: .timerFinished)
+        SoundService.instance.stop()
     }
     
     func startOvertime() {
         overTimeStartDate = Date.now
         timerState = .overtime
         startTicking()
+        SoundService.instance.stop()
     }
     
     func finishOvertime() {

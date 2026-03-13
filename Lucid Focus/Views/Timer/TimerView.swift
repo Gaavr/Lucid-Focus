@@ -126,7 +126,8 @@ struct TimerView: View {
                     onOvertime: {
                         isShowingDialog = false
                         vm.startOvertime()
-                    }
+                    },
+                    sound: vm.sound
                 )
             }
         }
