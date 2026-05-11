@@ -9,8 +9,8 @@ import SwiftUI
 
 struct TimerFinishedView: View {
     
-    let onStop: () -> Void
-    let onOvertime: () -> Void
+    let onPrimary: () -> Void
+    let onSecondary: () -> Void
     let sound: TimerSound
     
     var body: some View {
@@ -31,7 +31,7 @@ struct TimerFinishedView: View {
                 
                 VStack(spacing: 12) {
                     Button {
-                        onOvertime()
+                        onSecondary()
                     } label: {
                         Text("Start overtime")
                             .font(.system(size: 17, weight: .semibold))
@@ -42,7 +42,7 @@ struct TimerFinishedView: View {
                     .tint(.black)
                     
                     Button {
-                        onStop()
+                        onPrimary()
                     } label: {
                         Text("Stop")
                             .font(.system(size: 17, weight: .medium))
@@ -72,8 +72,8 @@ struct TimerFinishedView: View {
             .ignoresSafeArea()
         
         TimerFinishedView(
-            onStop: { print("Stop tapped") },
-            onOvertime: { print("Overtime tapped") },
+            onPrimary: { print("Stop tapped") },
+            onSecondary: { print("Overtime tapped") },
             sound: TimerSound.lofi
         )
     }

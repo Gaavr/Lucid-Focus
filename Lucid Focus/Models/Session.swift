@@ -11,23 +11,18 @@ import SwiftData
 @Model
 final class Session {
     var id: UUID
-    var startDate: Date
-    var endDate: Date?
-    var plannedDuration: TimeInterval?
     var activity: Activity?
     @Relationship(deleteRule: .cascade) var workBlocks: [WorkBlock] = []
     @Relationship(deleteRule: .cascade) var breaks: [Break] = []
     
-    init(activity: Activity, plannedDuration: TimeInterval? = nil) {
+    init(activity: Activity) {
         self.id = UUID()
-        self.startDate = .now
-        self.plannedDuration = plannedDuration
         self.activity = activity
     }
 }
 
 extension Session {
     static var example: Session {
-        Session(activity: .example, plannedDuration: 90 * 60)
+        Session(activity: .example)
     }
 }

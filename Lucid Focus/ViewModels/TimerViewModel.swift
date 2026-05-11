@@ -26,7 +26,8 @@ final class TimerViewModel {
     private let notificationService: NotificationService = NotificationService()
     private var overTimeStartDate: Date? = nil
     var overTimeDuration: TimeInterval = 0
-    var sound: TimerSound = .sound2
+    var sound: TimerSound = .sound2 //TODO: Сделать выбор из настроек потом
+    var currentTemplateIndex: Int = 0
     
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()

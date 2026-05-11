@@ -119,11 +119,11 @@ struct TimerView: View {
             }
             if isShowingDialog {
                 TimerFinishedView(
-                    onStop: {
+                    onPrimary: {
                         isShowingDialog = false
                         vm.stop()
                     },
-                    onOvertime: {
+                    onSecondary: {
                         isShowingDialog = false
                         vm.startOvertime()
                     },
