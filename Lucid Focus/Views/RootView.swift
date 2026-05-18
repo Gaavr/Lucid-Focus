@@ -20,7 +20,7 @@ struct RootView: View {
                 TimerView()
             }
             Tab(AppTab.activities.rawValue, systemImage: AppTab.activities.icon, value: AppTab.activities) {
-                ActivitiesView()
+                ActivitiesView(activities: Activity.examples)
             }
             Tab(AppTab.settings.rawValue, systemImage: AppTab.settings.icon, value: AppTab.settings) {
                 SettingsView()
